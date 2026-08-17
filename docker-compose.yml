@@ -1,0 +1,78 @@
+# CSE471 Term Project - Transparent Proxy (Java)
+#
+# Two containers on a private bridge network with fixed IPs:
+#   dns   -> 172.28.0.2   (dnsmasq, returns 172.28.0.3 for every domain)
+#   proxy -> 172.28.0.3   (Java proxy, listens on 80 + 443)
+#
+# A third "tester" container (alpine + curl) lets you demo the project
+# end-to-end without touching the host's DNS settings.
+#
+# Grading scenario (Debian VM):
+#   1. docker compose up --build
+#   2. point the VM's /etc/resolv.conf at 172.28.0.2
+#   3. browse any HTTP/HTTPS site - it flows through the proxy.
+
+services:
+  dns:
+    build: ./dns
+    container_name: cse471-dns
+    restart: unless-stopped
+    networks:
+      proxynet:
+        ipv4_address: 172.28.0.2
+    # NOTE on host port mapping:
+    # On macOS, port 5353 is owned by mDNSResponder (Bonjour), so do NOT
+    # publish to 5353. Port 53 also typically conflicts with the OS
+    # resolver. The proxy and tester containers reach DNS over the
+    # internal docker network anyway, so no host mapping is required.
+    # If you want to query our dnsmasq from the Mac host directly,
+    # uncomment the line below (1053 is a free, non-privileged port):
+    # ports:
+    #   - "1053:53/udp"
+
+  proxy:
+    build: ./proxy
+    container_name: cse471-proxy
+    restart: unless-stopped
+    depends_on:
+      - dns
+    networks:
+      proxynet:
+        ipv4_address: 172.28.0.3
+    # The proxy itself must NOT use our poisoned DNS - it needs the
+    # real IPs to forward traffic to. Use public resolvers instead.
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - proxy-data:/data
+
+  # Demo container: DNS is set to our dnsmasq, ships with curl.
+  #   docker exec -it cse471-tester curl -v  http://example.com
+  #   docker exec -it cse471-tester curl -vk https://www.wikipedia.org
+  tester:
+    image: alpine:3.19
+    container_name: cse471-tester
+    depends_on:
+      - dns
+      - proxy
+    networks:
+      proxynet:
+        ipv4_address: 172.28.0.4
+    dns:
+      - 172.28.0.2
+    command: >
+      sh -c "apk add --no-cache curl bind-tools >/dev/null && tail -f /dev/null"
+
+networks:
+  proxynet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  proxy-data:
