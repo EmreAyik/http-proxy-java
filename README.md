@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project implements a transparent HTTP/HTTPS proxy system for the CSE471 course project. The system consists of a Java-based proxy server and a DNS service. The DNS service redirects client requests to the proxy, and the proxy then handles HTTP and HTTPS traffic according to the project requirements.
+This project implements a transparent HTTP/HTTPS proxy system consisting of a Java-based proxy server and a DNS service. The DNS service redirects client requests to the proxy, which handles HTTP and HTTPS traffic accordingly.
 
 The proxy supports HTTP request forwarding, HTTPS tunneling using SNI, host-based filtering, disk caching, request logging, report generation, and a Java Swing graphical user interface. The project can be run with Docker Compose or directly from a Java IDE such as Eclipse.
 
