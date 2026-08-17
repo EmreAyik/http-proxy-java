@@ -6,13 +6,7 @@ This project implements a transparent HTTP/HTTPS proxy system for the CSE471 cou
 
 The proxy supports HTTP request forwarding, HTTPS tunneling using SNI, host-based filtering, disk caching, request logging, report generation, and a Java Swing graphical user interface. The project can be run with Docker Compose or directly from a Java IDE such as Eclipse.
 
-## Developer Information
 
-```text
-Developer: Emre AYIK
-Student No: 20230702107
-Course: CSE471
-```
 
 ## Main Features
 
